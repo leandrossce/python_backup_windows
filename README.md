@@ -1,4 +1,4 @@
-## Python Backup Script for Windows
+## Programa em Python para Backups no Windows
 
 Este script Python oferece uma solução robusta para realizar backups incrementais de arquivos em sistemas Windows. Ele foi projetado para detectar e copiar apenas os arquivos que foram modificados desde o último backup, garantindo eficiência no uso de espaço e tempo de processamento.
 
