@@ -1,3 +1,8 @@
+#use os comandos abaixo para criar um executável de arquivo único
+#pip install pyinstaller
+#pyinstaller --noconsole --onefile script.py
+
+
 import os
 import shutil
 from datetime import datetime
