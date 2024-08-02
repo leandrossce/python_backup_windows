@@ -21,8 +21,36 @@ def get_last_backup_time(backup_dir):
 def count_total_files(source_dir):
     """Contar o número total de arquivos no diretório e subdiretórios."""
     total_files = 0
+    contador =-1
+
+
+
     for _, _, filenames in os.walk(source_dir):
+        contador=contador+1
+        if(contador==0):
+            status_label.config(text="Processando.")
+            root.update_idletasks()  # Atualiza a interface visualmente   
+        if(contador==1):
+            status_label.config(text="Processando..")
+            root.update_idletasks()  # Atualiza a interface visualmente                   
+        if(contador==3):
+            status_label.config(text="Processando...")
+            root.update_idletasks()  # Atualiza a interface visualmente                   
+        else:
+            contador=-1
+
+        status_copiado.config(text="Análise: "+str(source_dir))
+        root.update_idletasks()  # Atualiza a interface visualmente  
+
         total_files += len(filenames)
+        if ((total_files%1000)==0):
+            print(f'\r {str(total_files)} arquivos processados. Aguarde...\n', end='')	
+
+
+    status_copiado.config(text="")
+    root.update_idletasks()  # Atualiza a interface visualmente 
+    #print(f'\rProgresso: {progress:.2f}%', end='')			
+       
     return total_files
 
 
@@ -52,15 +80,23 @@ def backup_modified_files(source_dir, backup_dir):
         if not os.path.exists(backup_subdir):
             os.makedirs(backup_subdir)
 
+
+		
         for filename in filenames:
 
             try:
                 source_file = os.path.join(foldername, filename)
                 backup_file = os.path.join(backup_subdir, filename)
-                
+				
+
+                print(f'\rVerificando caminho: {backup_file}. Aguarde...\n', end='')	
+                status_copiado.config(text="Análise: "+str(filename))
+                root.update_idletasks()  # Atualiza a interface visualmente   
+
                 if datetime.fromtimestamp(os.path.getmtime(source_file)) > last_backup_time:
                     shutil.copy2(source_file, backup_file)
                    # print(f'Backup atualizado para: {filename}')
+                   
                     status_copiado.config(text="Copiado: "+str(filename))
                     
                     root.update_idletasks()  # Atualiza a interface visualmente                    
@@ -70,16 +106,36 @@ def backup_modified_files(source_dir, backup_dir):
                 #print(f'\rProgresso: {progress:.2f}%', end='')
 
                 status_label.config(text="Progresso: "+str(round(progress))+"%")
+				
+                #print(source_file)
                
                 root.update_idletasks()  # Atualiza a interface visualmente
 
-            except PermissionError:
-                #print(f'Erro de permissão: não foi possível copiar {source_file}')
-                error_files.append(source_file)
+            except:
+                print(f'Erro de permissão: não foi possível copiar {source_file}')		
+                error_files.append(source_file)				
+                pass
 
+
+    print(f'\rVerificando caminho: {backup_file}. Aguarde...\n', end='')	
+    
+    status_copiado.config(text="")
     # Atualiza a data do último backup
     set_last_backup_time(backup_dir)
     messagebox.showinfo("Backup Concluído", "O backup foi concluído com sucesso.")
+	
+    #print(error_files)
+	
+    # Atualiza a data do último backup
+    set_last_backup_time(backup_dir)
+    # Calcular e exibir a duração do backup
+    end_time = datetime.now()
+    duration = end_time - start_time
+    duration_in_s = duration.total_seconds()
+    hours, remainder = divmod(duration_in_s, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    print(error_files)
+    print(f'\nBackup concluído em {int(hours)} horas, {int(minutes)} minutos e {int(seconds)} segundos.')   	
 
 def select_source_directory():
     directory = filedialog.askdirectory()
@@ -93,8 +149,6 @@ def select_backup_directory():
 
 def start_backup():
 
-    status_label.config(text="Progresso: "+str(0.00)+"%")
-    root.update_idletasks()  # Atualiza a interface visualmente    
 
     source_directory = source_entry.get()
     backup_directory = backup_entry.get()
@@ -150,7 +204,7 @@ status_label.grid(row=3, column=1,  pady=1)
 
 
 
-status_copiado = tk.Label(root, text="",width=20, anchor='w')
+status_copiado = tk.Label(root, text="",width=50, anchor='w')
 status_copiado.grid(row=2, column=0,  pady=0)
 
 
