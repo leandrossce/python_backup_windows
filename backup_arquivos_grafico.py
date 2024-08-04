@@ -167,7 +167,7 @@ def start_backup():
 
 # Configuração da interface gráfica
 root = tk.Tk()
-root.title("Backup de Arquivos - Comparação de hash")
+root.title("Backup de Arquivos - Comparação data de modificação")
 
 
 
