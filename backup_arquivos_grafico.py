@@ -44,6 +44,8 @@ def get_last_backup_time(backup_dir):
 
 
 def count_total_files(source_dir):
+    return 0
+    '''
     """Contar o número total de arquivos no diretório e subdiretórios."""
     total_files = 0
     contador =-1
@@ -77,7 +79,7 @@ def count_total_files(source_dir):
     #print(f'\rProgresso: {progress:.2f}%', end='')			
        
     return total_files
-
+'''
 
 def set_last_backup_time(backup_dir):
     """Salve a hora atual como a hora do último backup."""
@@ -86,6 +88,8 @@ def set_last_backup_time(backup_dir):
         file.write(datetime.now().isoformat())
 
 def backup_modified_files(source_dir, backup_dir):
+
+    print("Iniciando o processamento. Aguarde!...")
 
     remove_readonly_recursively (backup_dir)  #remover "somente leitura" no destino (bkp)    
 
@@ -97,6 +101,7 @@ def backup_modified_files(source_dir, backup_dir):
 
 
     error_files = []
+    atualizados_files = []
     total_files = count_total_files(source_dir)
     processed_files = 0
 
@@ -128,17 +133,19 @@ def backup_modified_files(source_dir, backup_dir):
                    
                     status_copiado.config(text="Copiado: "+str(filename))
                     root.update_idletasks()  # Atualiza a interface visualmente     
-                    print(f'\r{backup_file} foi atualizado no backup...\n', end='')                                     
+                    print(f'\r{backup_file} foi atualizado no backup...\n', end='')  
+                    atualizados_files.append(backup_file)   
+
                 # Atualizar o contador de arquivos processados e mostrar progresso
-                processed_files += 1
-                progress = (processed_files / total_files) * 100
+                #processed_files += 1
+                #progress = (processed_files / total_files) * 100
                 #print(f'\rProgresso: {progress:.2f}%', end='')
 
-                status_label.config(text="Progresso: "+str(round(progress))+"%")
+                #status_label.config(text="Progresso: "+str(round(progress))+"%")
 				
                 #print(source_file)
                
-                root.update_idletasks()  # Atualiza a interface visualmente
+                #root.update_idletasks()  # Atualiza a interface visualmente
 
             except Exception as e:
                 print(f'Erro do tipo: {e} em {source_file}')		
@@ -166,9 +173,19 @@ def backup_modified_files(source_dir, backup_dir):
     duration_in_s = duration.total_seconds()
     hours, remainder = divmod(duration_in_s, 3600)
     minutes, seconds = divmod(remainder, 60)
-    print(error_files)
+    print("\nArquivos com Erros: ".join(error_files))
+    print("\nArquivos atualizados no backup: ".join(atualizados_files))
     print(f'\nBackup concluído em {int(hours)} horas, {int(minutes)} minutos e {int(seconds)} segundos.')  
 
+    # Abrir o arquivo em modo de escrita
+    with open(backup_dir+"/arquivos_erros.txt", 'w') as file:
+        for item in error_files:
+            file.write(f"\n{item}\n")  # Grava cada item do array em uma nova linha
+
+    # Abrir o arquivo em modo de escrita
+    with open(backup_dir+"/arquivos_atualizados.txt", 'w') as file:
+        for item in atualizados_files:
+            file.write(f"\n{item}\n")  # Grava cada item do array em uma nova linha            
 
     messagebox.showinfo("Backup Concluído", "O backup foi concluído com sucesso.")
 	
