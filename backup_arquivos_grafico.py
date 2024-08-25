@@ -14,6 +14,26 @@ from io import BytesIO
 from PIL import Image, ImageTk
 
 
+def remove_readonly_recursively(directory):
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            try:
+                # Verifica os atributos do arquivo
+                attributes = os.stat(file_path).st_mode
+                
+                # Remove o atributo de "somente leitura" se estiver ativo
+                if not attributes & 0o200:  # Verifica se o bit de escrita está desativado
+                    os.chmod(file_path, attributes | 0o200)  # Ativa o bit de escrita
+                    print(f"Atributo 'somente leitura' removido: {file_path}")
+                #else:
+                    #print(f"O arquivo já tem permissão de escrita: {file_path}")
+            except Exception as e:
+                print(f"Erro ao processar o arquivo {file_path}: {e}")
+                continue
+
+
+
 def get_last_backup_time(backup_dir):
     """Recuperar a hora do último backup de um arquivo."""
     last_backup_file = os.path.join(backup_dir, 'tempo_do_ultimo_backup.txt')
@@ -66,6 +86,10 @@ def set_last_backup_time(backup_dir):
         file.write(datetime.now().isoformat())
 
 def backup_modified_files(source_dir, backup_dir):
+
+    remove_readonly_recursively (backup_dir)  #remover "somente leitura" no destino (bkp)    
+
+
     """Arquivos de backup modificados desde o último backup, preservando a estrutura de diretórios."""
     last_backup_time = get_last_backup_time(backup_dir)
     if last_backup_time is None:
@@ -103,8 +127,8 @@ def backup_modified_files(source_dir, backup_dir):
                    # print(f'Backup atualizado para: {filename}')
                    
                     status_copiado.config(text="Copiado: "+str(filename))
-                    
-                    root.update_idletasks()  # Atualiza a interface visualmente                    
+                    root.update_idletasks()  # Atualiza a interface visualmente     
+                    print(f'\r{backup_file} foi atualizado no backup...\n', end='')                                     
                 # Atualizar o contador de arquivos processados e mostrar progresso
                 processed_files += 1
                 progress = (processed_files / total_files) * 100
@@ -116,21 +140,24 @@ def backup_modified_files(source_dir, backup_dir):
                
                 root.update_idletasks()  # Atualiza a interface visualmente
 
-            except:
-                print(f'Erro de permissão: não foi possível copiar {source_file}')		
+            except Exception as e:
+                print(f'Erro do tipo: {e} em {source_file}')		
                 error_files.append(source_file)				
                 continue
 
 
-    print(f'\rVerificando caminho: {backup_file}. Aguarde...\n', end='')	
-    
+    print(f'\rVerificando caminho: {backup_file}. Aguarde...\n', end='')
+
+
+   
     status_copiado.config(text="")
     # Atualiza a data do último backup
     set_last_backup_time(backup_dir)
-    messagebox.showinfo("Backup Concluído", "O backup foi concluído com sucesso.")
-	
-    #print(error_files)
-	
+    root.update_idletasks()  # Atualiza a interface visualmente
+    
+    status_label.config(text="Concluído!")
+    root.update_idletasks()  # Atualiza a interface visualmente
+
     # Atualiza a data do último backup
     set_last_backup_time(backup_dir)
     # Calcular e exibir a duração do backup
@@ -140,7 +167,13 @@ def backup_modified_files(source_dir, backup_dir):
     hours, remainder = divmod(duration_in_s, 3600)
     minutes, seconds = divmod(remainder, 60)
     print(error_files)
-    print(f'\nBackup concluído em {int(hours)} horas, {int(minutes)} minutos e {int(seconds)} segundos.')   	
+    print(f'\nBackup concluído em {int(hours)} horas, {int(minutes)} minutos e {int(seconds)} segundos.')  
+
+
+    messagebox.showinfo("Backup Concluído", "O backup foi concluído com sucesso.")
+	
+	
+ 	
 
 def select_source_directory():
     directory = filedialog.askdirectory()
