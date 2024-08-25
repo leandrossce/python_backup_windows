@@ -119,7 +119,7 @@ def backup_modified_files(source_dir, backup_dir):
             except:
                 print(f'Erro de permissão: não foi possível copiar {source_file}')		
                 error_files.append(source_file)				
-                pass
+                continue
 
 
     print(f'\rVerificando caminho: {backup_file}. Aguarde...\n', end='')	
