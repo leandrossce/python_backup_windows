@@ -8,12 +8,29 @@ import shutil
 from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog, messagebox
-import hashlib
 import base64
 from io import BytesIO
 from PIL import Image, ImageTk
 
 
+def copy_with_progress(source_file, dest_file, buffer_size=1024*1024):
+    total_size = os.path.getsize(source_file)
+    copied_size = 0
+
+    with open(source_file, 'rb') as src, open(dest_file, 'wb') as dst:
+        while True:
+            buffer = src.read(buffer_size)
+            if not buffer:
+                break
+            dst.write(buffer)
+            copied_size += len(buffer)
+            progress = copied_size / total_size * 100
+            print(f'\rCopiando para Backup: {progress:.2f}%', end='')
+            
+
+    # Copiar os metadados do arquivo, semelhante ao shutil.copy2
+    shutil.copystat(source_file, dest_file)
+    
 def remove_readonly_recursively(directory):
     for root, dirs, files in os.walk(directory):
         for file in files:
@@ -123,17 +140,19 @@ def backup_modified_files(source_dir, backup_dir):
                 backup_file = os.path.join(backup_subdir, filename)
 				
 
-                print(f'\rVerificando caminho: {backup_file}. Aguarde...\n', end='')	
-                status_copiado.config(text="Análise: "+str(filename))
-                root.update_idletasks()  # Atualiza a interface visualmente   
+                print(f'\rVerificando arquivo: {backup_file}.\n', end='')	
+                #status_copiado.config(text="Análise: "+str(filename))
+                #root.update_idletasks()  # Atualiza a interface visualmente   
 
                 if datetime.fromtimestamp(os.path.getmtime(source_file)) > last_backup_time:
-                    shutil.copy2(source_file, backup_file)
+
+                    copy_with_progress(source_file, backup_file)
+                    #shutil.copy2(source_file, backup_file)
                    # print(f'Backup atualizado para: {filename}')
                    
-                    status_copiado.config(text="Copiado: "+str(filename))
-                    root.update_idletasks()  # Atualiza a interface visualmente     
-                    print(f'\r{backup_file} foi atualizado no backup...\n', end='')  
+                    #status_copiado.config(text="Copiado: "+str(filename))
+                    #root.update_idletasks()  # Atualiza a interface visualmente     
+                    print(f'\r{backup_file} foi atualizado no backup.\n', end='')  
                     atualizados_files.append(backup_file)   
 
                 # Atualizar o contador de arquivos processados e mostrar progresso
@@ -153,7 +172,7 @@ def backup_modified_files(source_dir, backup_dir):
                 continue
 
 
-    print(f'\rVerificando caminho: {backup_file}. Aguarde...\n', end='')
+    print(f'\rVerificando caminho: {backup_file}. Aguarde...\n')
 
 
    
